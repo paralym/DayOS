@@ -11,6 +11,8 @@
 		3B23821923E209137BE6B5A3 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA154F03C6DD57C883BB95D8 /* TerminalTheme.swift */; };
 		5CCE29639271474F9DE43048 /* DayOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06131E9707244360F9AF2E37 /* DayOSApp.swift */; };
 		5D17222DD96DA340F84BF853 /* Todo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E18738F1A812A37851B372E /* Todo.swift */; };
+		66AC71E7C64F96B7DAA6F080 /* AIPlannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D0E2716F56E27244E4289A0F /* AIPlannerView.swift */; };
+		8F8832D20B90C7AEA813AA8D /* ClaudeAPIManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67BE0F34C64C574E7C3AF3CA /* ClaudeAPIManager.swift */; };
 		9D3FA1BF98614B0DD1303EB8 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B3265E5356392D4A9D90C0 /* TimelineView.swift */; };
 		B611CB4A52A2FBE8627E6764 /* TodoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C1937BC63C4B9187216D37F /* TodoStore.swift */; };
 		B85A8327E5329FB5399186CD /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1257B7A1D4CF1B44BC956CD7 /* NotificationManager.swift */; };
@@ -25,7 +27,9 @@
 		53551CA722BEEB2915B10D56 /* AddTodoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTodoView.swift; sourceTree = "<group>"; };
 		5E18738F1A812A37851B372E /* Todo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Todo.swift; sourceTree = "<group>"; };
 		6539AB0354C5C31FFC74EBC9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		67BE0F34C64C574E7C3AF3CA /* ClaudeAPIManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeAPIManager.swift; sourceTree = "<group>"; };
 		689D1453A71033359F90CA37 /* DayOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DayOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		D0E2716F56E27244E4289A0F /* AIPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPlannerView.swift; sourceTree = "<group>"; };
 		DA154F03C6DD57C883BB95D8 /* TerminalTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTheme.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -33,6 +37,7 @@
 		1A6FB088EFB599DB6A0AA38D /* Managers */ = {
 			isa = PBXGroup;
 			children = (
+				67BE0F34C64C574E7C3AF3CA /* ClaudeAPIManager.swift */,
 				1257B7A1D4CF1B44BC956CD7 /* NotificationManager.swift */,
 			);
 			path = Managers;
@@ -79,6 +84,7 @@
 			isa = PBXGroup;
 			children = (
 				53551CA722BEEB2915B10D56 /* AddTodoView.swift */,
+				D0E2716F56E27244E4289A0F /* AIPlannerView.swift */,
 				6539AB0354C5C31FFC74EBC9 /* ContentView.swift */,
 				44B3265E5356392D4A9D90C0 /* TimelineView.swift */,
 			);
@@ -143,7 +149,9 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				66AC71E7C64F96B7DAA6F080 /* AIPlannerView.swift in Sources */,
 				D7E232EDF18CD595B023EF2D /* AddTodoView.swift in Sources */,
+				8F8832D20B90C7AEA813AA8D /* ClaudeAPIManager.swift in Sources */,
 				1D770432ECA4BA09DE962FA6 /* ContentView.swift in Sources */,
 				5CCE29639271474F9DE43048 /* DayOSApp.swift in Sources */,
 				B85A8327E5329FB5399186CD /* NotificationManager.swift in Sources */,

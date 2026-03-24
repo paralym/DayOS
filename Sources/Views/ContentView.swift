@@ -3,6 +3,7 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var store: TodoStore
     @State private var showAddTodo = false
+    @State private var showAIPlanner = false
     @State private var currentTime = Date()
     @State private var showBoot = true
 
@@ -25,6 +26,10 @@ struct ContentView: View {
         .onReceive(clockTimer) { _ in currentTime = Date() }
         .sheet(isPresented: $showAddTodo) {
             AddTodoView()
+                .environmentObject(store)
+        }
+        .sheet(isPresented: $showAIPlanner) {
+            AIPlannerView()
                 .environmentObject(store)
         }
         .onAppear { styleWindow() }
@@ -136,12 +141,32 @@ struct ContentView: View {
             HStack(spacing: 12) {
                 cmdHint("[CLICK]", "select")
                 cmdHint("[N]", "new task")
+                cmdHint("[A]", "ai planner")
             }
 
             Spacer()
 
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 BlinkingCursor(width: 6, height: 11)
+
+                // AI Planner button
+                Button {
+                    showAIPlanner = true
+                } label: {
+                    HStack(spacing: 5) {
+                        Text("⚡")
+                        Text("AI")
+                            .font(TerminalTheme.body)
+                            .tracking(1)
+                    }
+                    .foregroundColor(TerminalTheme.cyan)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .terminalBorder(TerminalTheme.cyan.opacity(0.6))
+                }
+                .buttonStyle(.plain)
+                .glowEffect(TerminalTheme.cyan, radius: 2)
+                .keyboardShortcut("a", modifiers: [])
 
                 Button {
                     showAddTodo = true
