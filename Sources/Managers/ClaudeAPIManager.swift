@@ -1,5 +1,25 @@
 import Foundation
 
+// MARK: - Provider
+enum APIProvider: String, CaseIterable {
+    case anthropic   = "Anthropic"
+    case openRouter  = "OpenRouter"
+
+    var baseURL: String {
+        switch self {
+        case .anthropic:  return "https://api.anthropic.com/v1/messages"
+        case .openRouter: return "https://openrouter.ai/api/v1/chat/completions"
+        }
+    }
+
+    var defaultModel: String {
+        switch self {
+        case .anthropic:  return "claude-opus-4-6"
+        case .openRouter: return "anthropic/claude-opus-4"
+        }
+    }
+}
+
 // MARK: - Scheduled Task from AI
 struct AIScheduledTask: Identifiable {
     let id = UUID()
@@ -10,22 +30,13 @@ struct AIScheduledTask: Identifiable {
     var notes: String
     var isSelected: Bool = true
 
-    // Convert to a Todo for the store
     func toTodo() -> Todo? {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
-
         guard let start = parseTime(startTime, base: today),
-              let end   = parseTime(endTime, base: today),
+              let end   = parseTime(endTime,   base: today),
               end > start else { return nil }
-
-        return Todo(
-            title: title,
-            startTime: start,
-            endTime: end,
-            notes: notes,
-            priority: priority
-        )
+        return Todo(title: title, startTime: start, endTime: end, notes: notes, priority: priority)
     }
 
     private func parseTime(_ str: String, base: Date) -> Date? {
@@ -44,14 +55,30 @@ struct PlanResult {
 class ClaudeAPIManager: ObservableObject {
     static let shared = ClaudeAPIManager()
 
+    @Published var provider: APIProvider {
+        didSet { UserDefaults.standard.set(provider.rawValue, forKey: "dayos_provider") }
+    }
     @Published var apiKey: String {
-        didSet { UserDefaults.standard.set(apiKey, forKey: "dayos_claude_api_key") }
+        didSet { UserDefaults.standard.set(apiKey, forKey: "dayos_api_key_\(provider.rawValue)") }
+    }
+    @Published var model: String {
+        didSet { UserDefaults.standard.set(model, forKey: "dayos_model_\(provider.rawValue)") }
     }
 
     var hasKey: Bool { !apiKey.trimmingCharacters(in: .whitespaces).isEmpty }
 
     private init() {
-        apiKey = UserDefaults.standard.string(forKey: "dayos_claude_api_key") ?? ""
+        let savedProvider = UserDefaults.standard.string(forKey: "dayos_provider") ?? ""
+        let p = APIProvider(rawValue: savedProvider) ?? .anthropic
+        provider = p
+        apiKey = UserDefaults.standard.string(forKey: "dayos_api_key_\(p.rawValue)") ?? ""
+        model   = UserDefaults.standard.string(forKey: "dayos_model_\(p.rawValue)") ?? p.defaultModel
+    }
+
+    func switchProvider(_ newProvider: APIProvider) {
+        provider = newProvider
+        apiKey = UserDefaults.standard.string(forKey: "dayos_api_key_\(newProvider.rawValue)") ?? ""
+        model  = UserDefaults.standard.string(forKey: "dayos_model_\(newProvider.rawValue)") ?? newProvider.defaultModel
     }
 
     // MARK: - Plan Tasks
@@ -60,127 +87,160 @@ class ClaudeAPIManager: ObservableObject {
         guard hasKey else { throw APIError.noAPIKey }
 
         let now = Date()
-        let formatter = DateFormatter()
-        formatter.dateFormat = "EEEE, MMMM d, yyyy"
-        let dateStr = formatter.string(from: now)
-        formatter.dateFormat = "HH:mm"
-        let timeStr = formatter.string(from: now)
+        let df  = DateFormatter()
+        df.dateFormat = "EEEE, MMMM d, yyyy"; let dateStr = df.string(from: now)
+        df.dateFormat = "HH:mm";              let timeStr  = df.string(from: now)
 
         let systemPrompt = """
-        You are an expert personal schedule planner. Your job is to analyze a user's task list and schedule them optimally for today.
-
-        Guidelines:
-        - Schedule tasks between 08:00–22:00 unless the user specifies otherwise
-        - Consider realistic time estimates for each task type
-        - Group related tasks together when possible
-        - Put high-energy/focus tasks in the morning
-        - Leave buffer time between tasks (5-15 min)
-        - Prioritize based on urgency and importance
-        - You MUST call the schedule_tasks tool with your result
+        You are an expert personal schedule planner. Analyze the user's task list and schedule them optimally for today.
+        Guidelines: schedule 08:00–22:00, realistic time estimates, group related tasks, \
+        high-focus tasks in morning, 5–15 min buffer between tasks, prioritize by urgency/importance.
+        You MUST call the schedule_tasks tool with your result.
         """
 
-        let userMessage = """
-        Today is \(dateStr). Current time is \(timeStr).
+        let userMessage = "Today is \(dateStr). Current time is \(timeStr).\n\nSchedule these tasks:\n\n\(input)"
 
-        Please schedule these tasks for me today:
+        switch provider {
+        case .anthropic:
+            return try await callAnthropic(system: systemPrompt, user: userMessage)
+        case .openRouter:
+            return try await callOpenRouter(system: systemPrompt, user: userMessage)
+        }
+    }
 
-        \(input)
-        """
+    // MARK: - Anthropic
 
+    private func callAnthropic(system: String, user: String) async throws -> PlanResult {
         let tool: [String: Any] = [
             "name": "schedule_tasks",
-            "description": "Output the optimized daily schedule as structured data",
-            "input_schema": [
-                "type": "object",
-                "properties": [
-                    "reasoning": [
-                        "type": "string",
-                        "description": "Brief explanation of how you organized the schedule and why"
-                    ],
-                    "tasks": [
-                        "type": "array",
-                        "items": [
-                            "type": "object",
-                            "properties": [
-                                "title":     ["type": "string", "description": "Clear task name"],
-                                "startTime": ["type": "string", "description": "Start time in HH:MM (24h) format"],
-                                "endTime":   ["type": "string", "description": "End time in HH:MM (24h) format"],
-                                "priority":  ["type": "string", "enum": ["LOW", "MED", "HIGH", "CRIT"]],
-                                "notes":     ["type": "string", "description": "Optional tips or sub-tasks"]
-                            ],
-                            "required": ["title", "startTime", "endTime", "priority", "notes"]
-                        ]
-                    ]
-                ],
-                "required": ["reasoning", "tasks"]
-            ]
+            "description": "Output the optimized daily schedule",
+            "input_schema": taskSchema()
         ]
-
         let body: [String: Any] = [
-            "model": "claude-opus-4-6",
+            "model": model,
             "max_tokens": 4096,
-            "system": systemPrompt,
+            "system": system,
             "tools": [tool],
             "tool_choice": ["type": "tool", "name": "schedule_tasks"],
+            "messages": [["role": "user", "content": user]]
+        ]
+
+        var req = URLRequest(url: URL(string: APIProvider.anthropic.baseURL)!)
+        req.httpMethod = "POST"
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        req.timeoutInterval = 60
+
+        let data = try await perform(req)
+
+        guard let json    = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let content = json["content"] as? [[String: Any]],
+              let toolUse = content.first(where: { $0["type"] as? String == "tool_use" }),
+              let input   = toolUse["input"] as? [String: Any] else {
+            throw APIError.parseError("No tool_use block in Anthropic response")
+        }
+        return try decodePlanResult(from: input)
+    }
+
+    // MARK: - OpenRouter (OpenAI-compatible)
+
+    private func callOpenRouter(system: String, user: String) async throws -> PlanResult {
+        let tool: [String: Any] = [
+            "type": "function",
+            "function": [
+                "name": "schedule_tasks",
+                "description": "Output the optimized daily schedule",
+                "parameters": taskSchema()
+            ]
+        ]
+        let body: [String: Any] = [
+            "model": model,
+            "tools": [tool],
+            "tool_choice": ["type": "function", "function": ["name": "schedule_tasks"]],
             "messages": [
-                ["role": "user", "content": userMessage]
+                ["role": "system", "content": system],
+                ["role": "user",   "content": user]
             ]
         ]
 
-        let data = try JSONSerialization.data(withJSONObject: body)
+        var req = URLRequest(url: URL(string: APIProvider.openRouter.baseURL)!)
+        req.httpMethod = "POST"
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        req.setValue("application/json",    forHTTPHeaderField: "Content-Type")
+        req.setValue("Bearer \(apiKey)",     forHTTPHeaderField: "Authorization")
+        req.setValue("DayOS/1.0",           forHTTPHeaderField: "HTTP-Referer")
+        req.timeoutInterval = 60
 
-        var request = URLRequest(url: URL(string: "https://api.anthropic.com/v1/messages")!)
-        request.httpMethod = "POST"
-        request.httpBody = data
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
-        request.timeoutInterval = 60
+        let data = try await perform(req)
 
-        let (responseData, httpResponse) = try await URLSession.shared.data(for: request)
+        guard let json    = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = json["choices"] as? [[String: Any]],
+              let msg     = choices.first?["message"] as? [String: Any],
+              let calls   = msg["tool_calls"] as? [[String: Any]],
+              let fn      = calls.first?["function"] as? [String: Any],
+              let argsStr = fn["arguments"] as? String,
+              let argsData = argsStr.data(using: .utf8),
+              let input   = try JSONSerialization.jsonObject(with: argsData) as? [String: Any] else {
+            throw APIError.parseError("No tool_calls in OpenRouter response")
+        }
+        return try decodePlanResult(from: input)
+    }
 
-        guard let http = httpResponse as? HTTPURLResponse else { throw APIError.invalidResponse }
+    // MARK: - Shared helpers
+
+    private func perform(_ request: URLRequest) async throws -> Data {
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else { throw APIError.invalidResponse }
         if http.statusCode == 401 { throw APIError.invalidAPIKey }
         if http.statusCode == 429 { throw APIError.rateLimited }
         guard http.statusCode == 200 else {
-            let errorJson = try? JSONSerialization.jsonObject(with: responseData) as? [String: Any]
-            let msg = errorJson?["error"] as? [String: Any]
-            throw APIError.apiError(msg?["message"] as? String ?? "HTTP \(http.statusCode)")
+            let errorJson = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+            let msg = (errorJson?["error"] as? [String: Any])?["message"] as? String
+            throw APIError.apiError(msg ?? "HTTP \(http.statusCode)")
         }
-
-        return try parseResponse(responseData)
+        return data
     }
 
-    // MARK: - Parse Response
+    private func taskSchema() -> [String: Any] {
+        [
+            "type": "object",
+            "properties": [
+                "reasoning": ["type": "string", "description": "Brief explanation of schedule decisions"],
+                "tasks": [
+                    "type": "array",
+                    "items": [
+                        "type": "object",
+                        "properties": [
+                            "title":     ["type": "string"],
+                            "startTime": ["type": "string", "description": "HH:MM 24h"],
+                            "endTime":   ["type": "string", "description": "HH:MM 24h"],
+                            "priority":  ["type": "string", "enum": ["LOW", "MED", "HIGH", "CRIT"]],
+                            "notes":     ["type": "string"]
+                        ],
+                        "required": ["title", "startTime", "endTime", "priority", "notes"]
+                    ]
+                ]
+            ],
+            "required": ["reasoning", "tasks"]
+        ]
+    }
 
-    private func parseResponse(_ data: Data) throws -> PlanResult {
-        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-              let content = json["content"] as? [[String: Any]] else {
-            throw APIError.parseError("Invalid response structure")
-        }
-
-        // Find the tool_use block
-        guard let toolUse = content.first(where: { $0["type"] as? String == "tool_use" }),
-              let input = toolUse["input"] as? [String: Any] else {
-            throw APIError.parseError("No tool_use block in response")
-        }
-
+    private func decodePlanResult(from input: [String: Any]) throws -> PlanResult {
         let reasoning = input["reasoning"] as? String ?? ""
         guard let rawTasks = input["tasks"] as? [[String: Any]] else {
             throw APIError.parseError("No tasks array in response")
         }
-
         let tasks: [AIScheduledTask] = rawTasks.compactMap { t in
             guard let title     = t["title"]     as? String,
                   let startTime = t["startTime"] as? String,
                   let endTime   = t["endTime"]   as? String,
                   let prioRaw   = t["priority"]  as? String,
                   let priority  = TodoPriority(rawValue: prioRaw) else { return nil }
-            let notes = t["notes"] as? String ?? ""
             return AIScheduledTask(title: title, startTime: startTime, endTime: endTime,
-                                   priority: priority, notes: notes)
+                                   priority: priority, notes: t["notes"] as? String ?? "")
         }
-
         guard !tasks.isEmpty else { throw APIError.parseError("AI returned no tasks") }
         return PlanResult(tasks: tasks, reasoning: reasoning)
     }
@@ -188,19 +248,15 @@ class ClaudeAPIManager: ObservableObject {
 
 // MARK: - Errors
 enum APIError: LocalizedError {
-    case noAPIKey
-    case invalidAPIKey
-    case rateLimited
-    case invalidResponse
-    case parseError(String)
-    case apiError(String)
+    case noAPIKey, invalidAPIKey, rateLimited, invalidResponse
+    case parseError(String), apiError(String)
 
     var errorDescription: String? {
         switch self {
-        case .noAPIKey:           return "API key not configured. Tap the key icon to add it."
-        case .invalidAPIKey:      return "Invalid API key. Check your Anthropic API key."
-        case .rateLimited:        return "Rate limited. Please wait a moment and try again."
-        case .invalidResponse:    return "Received invalid response from API."
+        case .noAPIKey:           return "API key not set. Click ⚡ AI → key icon."
+        case .invalidAPIKey:      return "Invalid API key."
+        case .rateLimited:        return "Rate limited — wait a moment and retry."
+        case .invalidResponse:    return "Invalid response from API."
         case .parseError(let m):  return "Parse error: \(m)"
         case .apiError(let m):    return "API error: \(m)"
         }

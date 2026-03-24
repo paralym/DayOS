@@ -389,11 +389,14 @@ struct AIPlannerView: View {
     }
 }
 
-// MARK: - API Key Entry View
+// MARK: - API Settings View
 struct APIKeyView: View {
     @StateObject private var api = ClaudeAPIManager.shared
     @Environment(\.dismiss) var dismiss
+
+    @State private var selectedProvider: APIProvider = .anthropic
     @State private var keyInput: String = ""
+    @State private var modelInput: String = ""
     @State private var showKey = false
 
     var body: some View {
@@ -401,99 +404,130 @@ struct APIKeyView: View {
             TerminalTheme.background.ignoresSafeArea()
 
             VStack(spacing: 0) {
+                // Header
                 HStack {
-                    Text("> ANTHROPIC API KEY")
+                    Text("> AI SETTINGS")
                         .font(TerminalTheme.header)
                         .foregroundColor(TerminalTheme.amber)
                         .glowEffect(TerminalTheme.amber)
                     Spacer()
                     Button { dismiss() } label: {
-                        Text("[ ✕ ]")
-                            .font(TerminalTheme.body)
-                            .foregroundColor(TerminalTheme.primaryDim)
-                    }
-                    .buttonStyle(.plain)
+                        Text("[ ✕ ]").font(TerminalTheme.body).foregroundColor(TerminalTheme.primaryDim)
+                    }.buttonStyle(.plain)
                 }
-                .padding(14)
-                .background(TerminalTheme.surface)
+                .padding(14).background(TerminalTheme.surface)
 
                 Divider().background(TerminalTheme.border)
 
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Get your key from: console.anthropic.com")
-                        .font(TerminalTheme.micro)
-                        .foregroundColor(TerminalTheme.primaryDim)
-
-                    HStack(spacing: 6) {
-                        Text(">")
-                            .font(TerminalTheme.body)
-                            .foregroundColor(TerminalTheme.primaryDim)
-                        if showKey {
-                            TextField("sk-ant-...", text: $keyInput)
-                                .textFieldStyle(.plain)
-                                .font(TerminalTheme.body)
-                                .foregroundColor(TerminalTheme.amber)
-                        } else {
-                            SecureField("sk-ant-...", text: $keyInput)
-                                .textFieldStyle(.plain)
-                                .font(TerminalTheme.body)
-                                .foregroundColor(TerminalTheme.amber)
+                VStack(alignment: .leading, spacing: 18) {
+                    // Provider selector
+                    VStack(alignment: .leading, spacing: 6) {
+                        label("PROVIDER")
+                        HStack(spacing: 8) {
+                            ForEach(APIProvider.allCases, id: \.self) { p in
+                                Button {
+                                    selectedProvider = p
+                                    keyInput   = UserDefaults.standard.string(forKey: "dayos_api_key_\(p.rawValue)") ?? ""
+                                    modelInput = UserDefaults.standard.string(forKey: "dayos_model_\(p.rawValue)") ?? p.defaultModel
+                                } label: {
+                                    Text(p.rawValue.uppercased())
+                                        .font(TerminalTheme.small)
+                                        .foregroundColor(selectedProvider == p ? TerminalTheme.background : TerminalTheme.amber)
+                                        .padding(.horizontal, 12).padding(.vertical, 5)
+                                        .background(selectedProvider == p ? TerminalTheme.amber : Color.clear)
+                                        .terminalBorder(TerminalTheme.amber.opacity(0.6))
+                                }.buttonStyle(.plain)
+                            }
                         }
-                        Button {
-                            showKey.toggle()
-                        } label: {
-                            Text(showKey ? "[HIDE]" : "[SHOW]")
-                                .font(TerminalTheme.micro)
-                                .foregroundColor(TerminalTheme.primaryDim)
-                        }
-                        .buttonStyle(.plain)
                     }
-                    .padding(8)
-                    .terminalBorder(TerminalTheme.amber.opacity(0.5))
 
-                    Text("⚠  Key is stored locally in UserDefaults. Never share it.")
-                        .font(TerminalTheme.micro)
-                        .foregroundColor(TerminalTheme.amber.opacity(0.7))
+                    // Hint URL
+                    let hint = selectedProvider == .anthropic
+                        ? "console.anthropic.com → API Keys"
+                        : "openrouter.ai → Keys"
+                    Text("Get key from: \(hint)")
+                        .font(TerminalTheme.micro).foregroundColor(TerminalTheme.primaryDim)
+
+                    // API Key field
+                    VStack(alignment: .leading, spacing: 6) {
+                        label("API KEY")
+                        HStack(spacing: 6) {
+                            Text(">").font(TerminalTheme.body).foregroundColor(TerminalTheme.primaryDim)
+                            if showKey {
+                                TextField(selectedProvider == .anthropic ? "sk-ant-..." : "sk-or-...", text: $keyInput)
+                                    .textFieldStyle(.plain).font(TerminalTheme.body).foregroundColor(TerminalTheme.amber)
+                            } else {
+                                SecureField(selectedProvider == .anthropic ? "sk-ant-..." : "sk-or-...", text: $keyInput)
+                                    .textFieldStyle(.plain).font(TerminalTheme.body).foregroundColor(TerminalTheme.amber)
+                            }
+                            Button { showKey.toggle() } label: {
+                                Text(showKey ? "[HIDE]" : "[SHOW]")
+                                    .font(TerminalTheme.micro).foregroundColor(TerminalTheme.primaryDim)
+                            }.buttonStyle(.plain)
+                        }
+                        .padding(8).terminalBorder(TerminalTheme.amber.opacity(0.5))
+                    }
+
+                    // Model field
+                    VStack(alignment: .leading, spacing: 6) {
+                        label("MODEL")
+                        HStack(spacing: 6) {
+                            Text(">").font(TerminalTheme.body).foregroundColor(TerminalTheme.primaryDim)
+                            TextField(selectedProvider.defaultModel, text: $modelInput)
+                                .textFieldStyle(.plain).font(TerminalTheme.body).foregroundColor(TerminalTheme.cyan)
+                        }
+                        .padding(8).terminalBorder(TerminalTheme.cyan.opacity(0.4))
+                        if selectedProvider == .openRouter {
+                            Text("e.g.  anthropic/claude-opus-4  ·  openai/gpt-4o  ·  google/gemini-pro-1.5")
+                                .font(TerminalTheme.micro).foregroundColor(TerminalTheme.primaryDim.opacity(0.6))
+                        }
+                    }
+
+                    Text("⚠  Keys stored locally. Never share them.")
+                        .font(TerminalTheme.micro).foregroundColor(TerminalTheme.amber.opacity(0.6))
                 }
                 .padding(20)
 
                 Divider().background(TerminalTheme.border)
 
                 HStack {
-                    if api.hasKey {
+                    if !keyInput.isEmpty {
                         Button {
-                            api.apiKey = ""
                             keyInput = ""
+                            UserDefaults.standard.removeObject(forKey: "dayos_api_key_\(selectedProvider.rawValue)")
                         } label: {
-                            Text("[ CLEAR KEY ]")
-                                .font(TerminalTheme.body)
-                                .foregroundColor(TerminalTheme.red)
-                        }
-                        .buttonStyle(.plain)
-                        .glowEffect(TerminalTheme.red)
+                            Text("[ CLEAR ]").font(TerminalTheme.body).foregroundColor(TerminalTheme.red)
+                        }.buttonStyle(.plain).glowEffect(TerminalTheme.red)
                     }
                     Spacer()
                     Button {
-                        let trimmed = keyInput.trimmingCharacters(in: .whitespacesAndNewlines)
-                        if !trimmed.isEmpty { api.apiKey = trimmed }
+                        let k = keyInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                        let m = modelInput.trimmingCharacters(in: .whitespacesAndNewlines)
+                        UserDefaults.standard.set(k, forKey: "dayos_api_key_\(selectedProvider.rawValue)")
+                        UserDefaults.standard.set(m.isEmpty ? selectedProvider.defaultModel : m,
+                                                  forKey: "dayos_model_\(selectedProvider.rawValue)")
+                        api.switchProvider(selectedProvider)
                         dismiss()
                     } label: {
                         Text("[ SAVE ▶ ]")
                             .font(TerminalTheme.body)
                             .foregroundColor(TerminalTheme.background)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 6)
+                            .padding(.horizontal, 14).padding(.vertical, 6)
                             .background(TerminalTheme.amber)
-                    }
-                    .buttonStyle(.plain)
-                    .glowEffect(TerminalTheme.amber)
+                    }.buttonStyle(.plain).glowEffect(TerminalTheme.amber)
                 }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 10)
-                .background(TerminalTheme.surface)
+                .padding(.horizontal, 16).padding(.vertical, 10).background(TerminalTheme.surface)
             }
         }
-        .frame(width: 400, height: 250)
-        .onAppear { keyInput = api.apiKey }
+        .frame(width: 440, height: 420)
+        .onAppear {
+            selectedProvider = api.provider
+            keyInput   = api.apiKey
+            modelInput = api.model
+        }
+    }
+
+    private func label(_ text: String) -> some View {
+        Text(text).font(TerminalTheme.micro).foregroundColor(TerminalTheme.primaryDim).tracking(2)
     }
 }
