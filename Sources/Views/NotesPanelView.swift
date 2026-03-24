@@ -7,7 +7,8 @@ struct NotesPanelView: View {
 
     @State private var viewMode: ViewMode = .raw
     @State private var editingText: String = ""
-    @State private var showAddConfirm: UUID? = nil
+    @State private var expandedSuggestionId: UUID? = nil
+    @State private var editedStartTimes: [UUID: Date] = [:]
 
     enum ViewMode { case raw, agent }
 
@@ -269,45 +270,165 @@ struct NotesPanelView: View {
 
     private func suggestionRow(_ sug: AgentSuggestion) -> some View {
         let col = sug.priority.color
-        return VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 6) {
-                Text(sug.priority.symbol)
-                    .font(TerminalTheme.micro)
-                    .foregroundColor(col)
-                Text(sug.title.uppercased())
-                    .font(TerminalTheme.micro)
-                    .foregroundColor(col)
-                    .glowEffect(col, radius: 2)
-                    .lineLimit(1)
-                Spacer()
-                // Add button
-                Button {
-                    addSuggestionToTimeline(sug)
-                } label: {
-                    Text("[+]")
-                        .font(TerminalTheme.micro)
-                        .foregroundColor(TerminalTheme.primary)
+        let isExpanded = expandedSuggestionId == sug.id
+        let start = editedStartTimes[sug.id] ?? proposedStart(for: sug)
+        let end   = start.addingTimeInterval(Double(sug.estimatedMinutes) * 60)
+
+        return VStack(alignment: .leading, spacing: 0) {
+            // ── Collapsed header row (always visible) ──
+            Button {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    expandedSuggestionId = isExpanded ? nil : sug.id
+                    if editedStartTimes[sug.id] == nil {
+                        editedStartTimes[sug.id] = proposedStart(for: sug)
+                    }
                 }
-                .buttonStyle(.plain)
-                .glowEffect(radius: 2)
-                // Dismiss
-                Button {
-                    noteStore.dismissSuggestion(id: sug.id)
-                } label: {
-                    Text("[✕]")
+            } label: {
+                HStack(spacing: 5) {
+                    Text(isExpanded ? "▼" : "▶")
                         .font(TerminalTheme.micro)
-                        .foregroundColor(TerminalTheme.primaryDim)
+                        .foregroundColor(col.opacity(0.6))
+                    Text(sug.priority.symbol)
+                        .font(TerminalTheme.micro)
+                        .foregroundColor(col)
+                    Text(sug.title.uppercased())
+                        .font(TerminalTheme.micro)
+                        .foregroundColor(col)
+                        .glowEffect(col, radius: 2)
+                        .lineLimit(1)
+                    Spacer()
+                    Text("~\(sug.estimatedMinutes)m")
+                        .font(TerminalTheme.micro)
+                        .foregroundColor(col.opacity(0.5))
+                    Button {
+                        noteStore.dismissSuggestion(id: sug.id)
+                    } label: {
+                        Text("[✕]")
+                            .font(TerminalTheme.micro)
+                            .foregroundColor(TerminalTheme.primaryDim)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .buttonStyle(.plain)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 6)
+                .background(isExpanded ? col.opacity(0.10) : col.opacity(0.04))
             }
-            Text("~\(sug.estimatedMinutes)m · \(sug.reason)")
-                .font(TerminalTheme.micro)
-                .foregroundColor(col.opacity(0.5))
-                .lineLimit(2)
+            .buttonStyle(.plain)
+
+            // ── Expanded detail ──
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 8) {
+                    // Time display
+                    HStack(spacing: 4) {
+                        Text("TIME")
+                            .font(TerminalTheme.micro)
+                            .foregroundColor(TerminalTheme.primaryDim)
+                            .tracking(1)
+                        Spacer()
+                        Text("\(start.timeString) – \(end.timeString)")
+                            .font(TerminalTheme.small)
+                            .foregroundColor(col)
+                            .glowEffect(col, radius: 2)
+                    }
+
+                    // Time picker for start
+                    HStack(spacing: 4) {
+                        Text("START")
+                            .font(TerminalTheme.micro)
+                            .foregroundColor(TerminalTheme.primaryDim)
+                        DatePicker(
+                            "",
+                            selection: Binding(
+                                get: { editedStartTimes[sug.id] ?? start },
+                                set: { editedStartTimes[sug.id] = $0 }
+                            ),
+                            displayedComponents: .hourAndMinute
+                        )
+                        .datePickerStyle(.field)
+                        .labelsHidden()
+                        .colorScheme(.dark)
+                        .accentColor(col)
+                        .font(TerminalTheme.small)
+                    }
+
+                    // Reason
+                    Text(sug.reason)
+                        .font(TerminalTheme.micro)
+                        .foregroundColor(col.opacity(0.55))
+                        .lineLimit(3)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    // Confirm button
+                    Button {
+                        addSuggestionWithTime(sug, start: editedStartTimes[sug.id] ?? start)
+                        expandedSuggestionId = nil
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text("+ ADD TO TIMELINE")
+                                .font(TerminalTheme.micro)
+                                .tracking(1)
+                        }
+                        .foregroundColor(TerminalTheme.background)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .frame(maxWidth: .infinity)
+                        .background(col)
+                    }
+                    .buttonStyle(.plain)
+                    .glowEffect(col, radius: 2)
+                }
+                .padding(.horizontal, 8)
+                .padding(.vertical, 8)
+                .background(col.opacity(0.06))
+            }
         }
-        .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(col.opacity(0.04))
+    }
+
+    // Allow using .let on value types for inline binding
+    private func addSuggestionWithTime(_ sug: AgentSuggestion, start: Date) {
+        let end = start.addingTimeInterval(Double(sug.estimatedMinutes) * 60)
+        let todo = Todo(title: sug.title, startTime: start, endTime: end,
+                       notes: sug.reason, priority: sug.priority)
+        todoStore.addTodo(todo)
+        noteStore.markSuggestionAdded(id: sug.id)
+        editedStartTimes.removeValue(forKey: sug.id)
+    }
+
+    /// Computes the next available half-hour slot, stacking suggestions sequentially
+    private func proposedStart(for sug: AgentSuggestion) -> Date {
+        let cal = Calendar.current
+        let now = Date()
+        // Round current time up to next 30-min boundary
+        var comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: now)
+        let m = comps.minute ?? 0
+        if m < 30 { comps.minute = 30 } else { comps.minute = 0; comps.hour = (comps.hour ?? 0) + 1 }
+        comps.second = 0
+        var base = cal.date(from: comps) ?? now
+
+        // Push base past any existing todo that overlaps
+        let todayTodos = todoStore.todosForToday.filter { !$0.isCompleted }
+        for _ in 0..<48 { // max 24h scan in 30min steps
+            let candidate = base
+            let candidateEnd = candidate.addingTimeInterval(Double(sug.estimatedMinutes) * 60)
+            let conflicts = todayTodos.contains { t in
+                t.startTime < candidateEnd && t.endTime > candidate
+            }
+            if !conflicts { break }
+            base = base.addingTimeInterval(1800)
+        }
+
+        // Also stack after previously expanded suggestions
+        let active = activeSuggestions
+        if let idx = active.firstIndex(where: { $0.id == sug.id }), idx > 0 {
+            var cursor = base
+            for i in 0..<idx {
+                let prev = active[i]
+                let prevStart = editedStartTimes[prev.id] ?? cursor
+                cursor = prevStart.addingTimeInterval(Double(prev.estimatedMinutes) * 60 + 900) // +15min buffer
+            }
+            base = max(base, cursor)
+        }
+        return base
     }
 
     // MARK: - Collapse handle
@@ -338,24 +459,6 @@ struct NotesPanelView: View {
         let df = DateFormatter()
         df.dateFormat = "MM/dd"
         return df.string(from: Date())
-    }
-
-    private func addSuggestionToTimeline(_ sug: AgentSuggestion) {
-        let now = Date()
-        let cal = Calendar.current
-        // Schedule at the next free-ish slot after current time (round up to next half hour)
-        var comps = cal.dateComponents([.year, .month, .day, .hour, .minute], from: now)
-        let mins = comps.minute ?? 0
-        comps.minute = mins < 30 ? 30 : 0
-        if mins >= 30 { comps.hour = (comps.hour ?? 0) + 1 }
-        comps.second = 0
-        let start = cal.date(from: comps) ?? now
-        let end   = start.addingTimeInterval(Double(sug.estimatedMinutes) * 60)
-
-        let todo = Todo(title: sug.title, startTime: start, endTime: end,
-                       notes: sug.reason, priority: sug.priority)
-        todoStore.addTodo(todo)
-        noteStore.markSuggestionAdded(id: sug.id)
     }
 
     private func rescheduleToday(_ todo: Todo) {
