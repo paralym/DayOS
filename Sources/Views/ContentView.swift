@@ -2,10 +2,12 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var store: TodoStore
+    @EnvironmentObject var noteStore: NoteStore
     @State private var showAddTodo = false
     @State private var showAIPlanner = false
     @State private var currentTime = Date()
     @State private var showBoot = true
+    @State private var notePanelCollapsed = false
 
     let clockTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
@@ -43,8 +45,14 @@ struct ContentView: View {
             Divider().background(TerminalTheme.border)
             statusLine
             Divider().background(TerminalTheme.border)
-            TimelineView()
-                .environmentObject(store)
+            HStack(spacing: 0) {
+                NotesPanelView(isCollapsed: $notePanelCollapsed)
+                    .environmentObject(noteStore)
+                    .environmentObject(store)
+                Divider().background(TerminalTheme.border)
+                TimelineView()
+                    .environmentObject(store)
+            }
             Divider().background(TerminalTheme.border)
             bottomBar
         }

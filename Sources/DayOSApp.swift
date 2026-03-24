@@ -5,14 +5,16 @@ import UserNotifications
 struct DayOSApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var store = TodoStore()
+    @StateObject private var noteStore = NoteStore()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(store)
+                .environmentObject(noteStore)
                 .frame(
-                    minWidth: TerminalTheme.windowWidth,
-                    idealWidth: TerminalTheme.windowWidth,
+                    minWidth: 680,
+                    idealWidth: 780,
                     minHeight: TerminalTheme.windowHeight,
                     idealHeight: TerminalTheme.windowHeight
                 )

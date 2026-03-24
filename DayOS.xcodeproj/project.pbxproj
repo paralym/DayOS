@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		16B6653078B57CC67C4B3F21 /* NotesPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2BB7EF32D34FEAB918EFF4EA /* NotesPanelView.swift */; };
+		1AC7F5840BF0163C88A324EE /* DailyNote.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7D4022FD380D516411FF9D15 /* DailyNote.swift */; };
 		1D770432ECA4BA09DE962FA6 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6539AB0354C5C31FFC74EBC9 /* ContentView.swift */; };
 		3B23821923E209137BE6B5A3 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA154F03C6DD57C883BB95D8 /* TerminalTheme.swift */; };
 		5CCE29639271474F9DE43048 /* DayOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06131E9707244360F9AF2E37 /* DayOSApp.swift */; };
@@ -17,18 +19,22 @@
 		B611CB4A52A2FBE8627E6764 /* TodoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C1937BC63C4B9187216D37F /* TodoStore.swift */; };
 		B85A8327E5329FB5399186CD /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1257B7A1D4CF1B44BC956CD7 /* NotificationManager.swift */; };
 		D7E232EDF18CD595B023EF2D /* AddTodoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53551CA722BEEB2915B10D56 /* AddTodoView.swift */; };
+		DDFE03EE1968BA8C95B0FA7F /* NoteStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02B2661A1256C0455B97FDA6 /* NoteStore.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		02B2661A1256C0455B97FDA6 /* NoteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NoteStore.swift; sourceTree = "<group>"; };
 		06131E9707244360F9AF2E37 /* DayOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayOSApp.swift; sourceTree = "<group>"; };
 		1257B7A1D4CF1B44BC956CD7 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
 		1C1937BC63C4B9187216D37F /* TodoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoStore.swift; sourceTree = "<group>"; };
+		2BB7EF32D34FEAB918EFF4EA /* NotesPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotesPanelView.swift; sourceTree = "<group>"; };
 		44B3265E5356392D4A9D90C0 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
 		53551CA722BEEB2915B10D56 /* AddTodoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTodoView.swift; sourceTree = "<group>"; };
 		5E18738F1A812A37851B372E /* Todo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Todo.swift; sourceTree = "<group>"; };
 		6539AB0354C5C31FFC74EBC9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		67BE0F34C64C574E7C3AF3CA /* ClaudeAPIManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeAPIManager.swift; sourceTree = "<group>"; };
 		689D1453A71033359F90CA37 /* DayOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DayOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7D4022FD380D516411FF9D15 /* DailyNote.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailyNote.swift; sourceTree = "<group>"; };
 		D0E2716F56E27244E4289A0F /* AIPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AIPlannerView.swift; sourceTree = "<group>"; };
 		DA154F03C6DD57C883BB95D8 /* TerminalTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTheme.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -58,6 +64,8 @@
 		8DF08ADC963E7914F6BDD80C /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				7D4022FD380D516411FF9D15 /* DailyNote.swift */,
+				02B2661A1256C0455B97FDA6 /* NoteStore.swift */,
 				5E18738F1A812A37851B372E /* Todo.swift */,
 				1C1937BC63C4B9187216D37F /* TodoStore.swift */,
 			);
@@ -86,6 +94,7 @@
 				53551CA722BEEB2915B10D56 /* AddTodoView.swift */,
 				D0E2716F56E27244E4289A0F /* AIPlannerView.swift */,
 				6539AB0354C5C31FFC74EBC9 /* ContentView.swift */,
+				2BB7EF32D34FEAB918EFF4EA /* NotesPanelView.swift */,
 				44B3265E5356392D4A9D90C0 /* TimelineView.swift */,
 			);
 			path = Views;
@@ -153,7 +162,10 @@
 				D7E232EDF18CD595B023EF2D /* AddTodoView.swift in Sources */,
 				8F8832D20B90C7AEA813AA8D /* ClaudeAPIManager.swift in Sources */,
 				1D770432ECA4BA09DE962FA6 /* ContentView.swift in Sources */,
+				1AC7F5840BF0163C88A324EE /* DailyNote.swift in Sources */,
 				5CCE29639271474F9DE43048 /* DayOSApp.swift in Sources */,
+				DDFE03EE1968BA8C95B0FA7F /* NoteStore.swift in Sources */,
+				16B6653078B57CC67C4B3F21 /* NotesPanelView.swift in Sources */,
 				B85A8327E5329FB5399186CD /* NotificationManager.swift in Sources */,
 				3B23821923E209137BE6B5A3 /* TerminalTheme.swift in Sources */,
 				9D3FA1BF98614B0DD1303EB8 /* TimelineView.swift in Sources */,

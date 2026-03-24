@@ -227,6 +227,122 @@ class ClaudeAPIManager: ObservableObject {
         ]
     }
 
+    // MARK: - Note Processing
+
+    struct NoteProcessResult {
+        let organizedContent: String
+        let suggestions: [AgentSuggestion]
+    }
+
+    func processNote(content: String) async throws -> NoteProcessResult {
+        guard hasKey else { throw APIError.noAPIKey }
+
+        let df = DateFormatter()
+        df.dateFormat = "HH:mm"
+        let timeStr = df.string(from: Date())
+
+        let system = """
+        You are a productivity assistant silently observing the user's daily notes.
+        Your role: organize their raw thoughts into actionable tasks and surface what matters most.
+
+        Rules:
+        - Keep very close to the user's original words — don't invent new tasks
+        - organizedContent: rewrite their note as a clean, structured list (markdown bullets)
+        - suggestions: pick 2–4 specific tasks worth scheduling TODAY, with realistic time estimates
+        - Be concise — this is a terminal UI with limited space
+        - You MUST call the process_note tool
+        """
+        let user = "Current time: \(timeStr)\n\nUser's notes:\n\n\(content)"
+
+        let schema: [String: Any] = [
+            "type": "object",
+            "properties": [
+                "organizedContent": ["type": "string", "description": "Structured markdown version of the note"],
+                "suggestions": [
+                    "type": "array",
+                    "description": "Top tasks worth adding to today's timeline",
+                    "items": [
+                        "type": "object",
+                        "properties": [
+                            "title":              ["type": "string"],
+                            "priority":           ["type": "string", "enum": ["LOW", "MED", "HIGH", "CRIT"]],
+                            "estimatedMinutes":   ["type": "integer"],
+                            "reason":             ["type": "string", "description": "One sentence why this matters now"]
+                        ],
+                        "required": ["title", "priority", "estimatedMinutes", "reason"]
+                    ]
+                ]
+            ],
+            "required": ["organizedContent", "suggestions"]
+        ]
+
+        let input: [String: Any]
+        switch provider {
+        case .anthropic:
+            let tool: [String: Any] = ["name": "process_note", "description": "Output organized note and suggestions", "input_schema": schema]
+            let body: [String: Any] = [
+                "model": model, "max_tokens": 2048, "system": system,
+                "tools": [tool], "tool_choice": ["type": "tool", "name": "process_note"],
+                "messages": [["role": "user", "content": user]]
+            ]
+            var req = URLRequest(url: URL(string: APIProvider.anthropic.baseURL)!)
+            req.httpMethod = "POST"
+            req.httpBody = try JSONSerialization.data(withJSONObject: body)
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            req.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+            req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+            req.timeoutInterval = 45
+            let data = try await perform(req)
+            guard let json    = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let content = json["content"] as? [[String: Any]],
+                  let toolUse = content.first(where: { $0["type"] as? String == "tool_use" }),
+                  let inp     = toolUse["input"] as? [String: Any] else {
+                throw APIError.parseError("No tool_use in note response")
+            }
+            input = inp
+
+        case .openRouter:
+            let tool: [String: Any] = ["type": "function", "function": ["name": "process_note", "description": "Output organized note", "parameters": schema]]
+            let body: [String: Any] = [
+                "model": model,
+                "tools": [tool],
+                "tool_choice": ["type": "function", "function": ["name": "process_note"]],
+                "messages": [["role": "system", "content": system], ["role": "user", "content": user]]
+            ]
+            var req = URLRequest(url: URL(string: APIProvider.openRouter.baseURL)!)
+            req.httpMethod = "POST"
+            req.httpBody = try JSONSerialization.data(withJSONObject: body)
+            req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            req.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+            req.setValue("DayOS/1.0", forHTTPHeaderField: "HTTP-Referer")
+            req.timeoutInterval = 45
+            let data = try await perform(req)
+            guard let json    = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  let choices = json["choices"] as? [[String: Any]],
+                  let msg     = choices.first?["message"] as? [String: Any],
+                  let calls   = msg["tool_calls"] as? [[String: Any]],
+                  let fn      = calls.first?["function"] as? [String: Any],
+                  let argsStr = fn["arguments"] as? String,
+                  let argsData = argsStr.data(using: .utf8),
+                  let inp     = try JSONSerialization.jsonObject(with: argsData) as? [String: Any] else {
+                throw APIError.parseError("No tool_calls in note response")
+            }
+            input = inp
+        }
+
+        let organized = input["organizedContent"] as? String ?? content
+        let rawSugs = input["suggestions"] as? [[String: Any]] ?? []
+        let suggestions: [AgentSuggestion] = rawSugs.compactMap { s in
+            guard let title  = s["title"]            as? String,
+                  let pRaw   = s["priority"]          as? String,
+                  let prio   = TodoPriority(rawValue: pRaw),
+                  let mins   = s["estimatedMinutes"]  as? Int,
+                  let reason = s["reason"]            as? String else { return nil }
+            return AgentSuggestion(title: title, priority: prio, estimatedMinutes: mins, reason: reason)
+        }
+        return NoteProcessResult(organizedContent: organized, suggestions: suggestions)
+    }
+
     private func decodePlanResult(from input: [String: Any]) throws -> PlanResult {
         let reasoning = input["reasoning"] as? String ?? ""
         guard let rawTasks = input["tasks"] as? [[String: Any]] else {
