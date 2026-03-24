@@ -1,0 +1,6 @@
+build/
+*.dmg
+*.xcuserstate
+xcuserdata/
+DayOS.xcodeproj/xcuserdata/
+.DS_Store

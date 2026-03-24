@@ -1,0 +1,343 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 54;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		1D770432ECA4BA09DE962FA6 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6539AB0354C5C31FFC74EBC9 /* ContentView.swift */; };
+		3B23821923E209137BE6B5A3 /* TerminalTheme.swift in Sources */ = {isa = PBXBuildFile; fileRef = DA154F03C6DD57C883BB95D8 /* TerminalTheme.swift */; };
+		5CCE29639271474F9DE43048 /* DayOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 06131E9707244360F9AF2E37 /* DayOSApp.swift */; };
+		5D17222DD96DA340F84BF853 /* Todo.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5E18738F1A812A37851B372E /* Todo.swift */; };
+		9D3FA1BF98614B0DD1303EB8 /* TimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44B3265E5356392D4A9D90C0 /* TimelineView.swift */; };
+		B611CB4A52A2FBE8627E6764 /* TodoStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1C1937BC63C4B9187216D37F /* TodoStore.swift */; };
+		B85A8327E5329FB5399186CD /* NotificationManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1257B7A1D4CF1B44BC956CD7 /* NotificationManager.swift */; };
+		D7E232EDF18CD595B023EF2D /* AddTodoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 53551CA722BEEB2915B10D56 /* AddTodoView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		06131E9707244360F9AF2E37 /* DayOSApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DayOSApp.swift; sourceTree = "<group>"; };
+		1257B7A1D4CF1B44BC956CD7 /* NotificationManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationManager.swift; sourceTree = "<group>"; };
+		1C1937BC63C4B9187216D37F /* TodoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodoStore.swift; sourceTree = "<group>"; };
+		44B3265E5356392D4A9D90C0 /* TimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimelineView.swift; sourceTree = "<group>"; };
+		53551CA722BEEB2915B10D56 /* AddTodoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddTodoView.swift; sourceTree = "<group>"; };
+		5E18738F1A812A37851B372E /* Todo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Todo.swift; sourceTree = "<group>"; };
+		6539AB0354C5C31FFC74EBC9 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		689D1453A71033359F90CA37 /* DayOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = DayOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		DA154F03C6DD57C883BB95D8 /* TerminalTheme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TerminalTheme.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		1A6FB088EFB599DB6A0AA38D /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				1257B7A1D4CF1B44BC956CD7 /* NotificationManager.swift */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		439F8DD59876DD2442EED17A /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				06131E9707244360F9AF2E37 /* DayOSApp.swift */,
+				DA154F03C6DD57C883BB95D8 /* TerminalTheme.swift */,
+				1A6FB088EFB599DB6A0AA38D /* Managers */,
+				8DF08ADC963E7914F6BDD80C /* Models */,
+				EEB85E6BACA0E4183D6166FC /* Views */,
+			);
+			path = Sources;
+			sourceTree = "<group>";
+		};
+		8DF08ADC963E7914F6BDD80C /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				5E18738F1A812A37851B372E /* Todo.swift */,
+				1C1937BC63C4B9187216D37F /* TodoStore.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		BA4748108C05F81BFE3C14AD = {
+			isa = PBXGroup;
+			children = (
+				439F8DD59876DD2442EED17A /* Sources */,
+				E27BEB3C0E7D018164462EC1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E27BEB3C0E7D018164462EC1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				689D1453A71033359F90CA37 /* DayOS.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		EEB85E6BACA0E4183D6166FC /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				53551CA722BEEB2915B10D56 /* AddTodoView.swift */,
+				6539AB0354C5C31FFC74EBC9 /* ContentView.swift */,
+				44B3265E5356392D4A9D90C0 /* TimelineView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		1484D8FF7987FEBF51574098 /* DayOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 34D33BF9B968061B2F980484 /* Build configuration list for PBXNativeTarget "DayOS" */;
+			buildPhases = (
+				56BFF05FA4775C70C71DD089 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = DayOS;
+			packageProductDependencies = (
+			);
+			productName = DayOS;
+			productReference = 689D1453A71033359F90CA37 /* DayOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		2742922225F77B6309328F1F /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					1484D8FF7987FEBF51574098 = {
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 0C3A5565A8D2924B67D2CD38 /* Build configuration list for PBXProject "DayOS" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = BA4748108C05F81BFE3C14AD;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 54;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				1484D8FF7987FEBF51574098 /* DayOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		56BFF05FA4775C70C71DD089 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				D7E232EDF18CD595B023EF2D /* AddTodoView.swift in Sources */,
+				1D770432ECA4BA09DE962FA6 /* ContentView.swift in Sources */,
+				5CCE29639271474F9DE43048 /* DayOSApp.swift in Sources */,
+				B85A8327E5329FB5399186CD /* NotificationManager.swift in Sources */,
+				3B23821923E209137BE6B5A3 /* TerminalTheme.swift in Sources */,
+				9D3FA1BF98614B0DD1303EB8 /* TimelineView.swift in Sources */,
+				5D17222DD96DA340F84BF853 /* Todo.swift in Sources */,
+				B611CB4A52A2FBE8627E6764 /* TodoStore.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		287266E64C613F204D311BC3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		5885B921F7FD7B09AF8E7C58 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = DayOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dayos.app;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		7D6FCF1DAF5BBAAE02654071 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = DayOS.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = YES;
+				INFOPLIST_FILE = Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.dayos.app;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+		888B01B359E4EFF43835EC79 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 13.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		0C3A5565A8D2924B67D2CD38 /* Build configuration list for PBXProject "DayOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				888B01B359E4EFF43835EC79 /* Debug */,
+				287266E64C613F204D311BC3 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		34D33BF9B968061B2F980484 /* Build configuration list for PBXNativeTarget "DayOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7D6FCF1DAF5BBAAE02654071 /* Debug */,
+				5885B921F7FD7B09AF8E7C58 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 2742922225F77B6309328F1F /* Project object */;
+}
