@@ -1,33 +1,34 @@
 import SwiftUI
 
 enum TerminalTheme {
-    // MARK: - Colors
-    static let background = Color(red: 0.02, green: 0.04, blue: 0.02)
-    static let surface = Color(red: 0.05, green: 0.09, blue: 0.05)
-    static let border = Color(red: 0.12, green: 0.35, blue: 0.12)
-    static let borderDim = Color(red: 0.07, green: 0.18, blue: 0.07)
+    // MARK: - Dynamic Colors (read from ThemeStore)
+    static var background: Color { ThemeStore.shared.preset.background }
+    static var surface: Color    { ThemeStore.shared.preset.surface }
+    static var border: Color     { ThemeStore.shared.preset.border }
+    static var borderDim: Color  { ThemeStore.shared.preset.borderDim }
+    static var primary: Color    { ThemeStore.shared.preset.primary }
+    static var primaryDim: Color { ThemeStore.shared.preset.primaryDim }
 
-    static let primary = Color(red: 0.18, green: 0.98, blue: 0.18)      // phosphor green
-    static let primaryDim = Color(red: 0.08, green: 0.45, blue: 0.08)
-    static let cyan = Color(red: 0.0, green: 0.88, blue: 0.88)
-    static let amber = Color(red: 1.0, green: 0.72, blue: 0.0)
-    static let red = Color(red: 1.0, green: 0.22, blue: 0.22)
+    // MARK: - Fixed Accent Colors
+    static let cyan   = Color(red: 0.0,  green: 0.88, blue: 0.88)
+    static let amber  = Color(red: 1.0,  green: 0.72, blue: 0.0)
+    static let red    = Color(red: 1.0,  green: 0.22, blue: 0.22)
     static let purple = Color(red: 0.75, green: 0.18, blue: 1.0)
 
     // MARK: - Fonts
     static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
     }
-    static let header = Font.system(size: 13, weight: .bold, design: .monospaced)
-    static let body = Font.system(size: 12, weight: .regular, design: .monospaced)
-    static let small = Font.system(size: 11, weight: .regular, design: .monospaced)
-    static let micro = Font.system(size: 9, weight: .regular, design: .monospaced)
+    static let header = Font.system(size: 13, weight: .bold,    design: .monospaced)
+    static let body   = Font.system(size: 12, weight: .regular, design: .monospaced)
+    static let small  = Font.system(size: 11, weight: .regular, design: .monospaced)
+    static let micro  = Font.system(size: 9,  weight: .regular, design: .monospaced)
 
     // MARK: - Layout
-    static let hourHeight: CGFloat = 80
+    static let hourHeight:      CGFloat = 80
     static let timeColumnWidth: CGFloat = 52
-    static let windowWidth: CGFloat = 500
-    static let windowHeight: CGFloat = 720
+    static let windowWidth:     CGFloat = 500
+    static let windowHeight:    CGFloat = 720
 }
 
 // MARK: - View Modifiers
@@ -69,7 +70,7 @@ struct ScanlineOverlay: View {
 struct BlinkingCursor: View {
     @State private var visible = true
     var color: Color = TerminalTheme.primary
-    var width: CGFloat = 8
+    var width:  CGFloat = 8
     var height: CGFloat = 13
 
     var body: some View {

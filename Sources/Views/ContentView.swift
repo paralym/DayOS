@@ -3,8 +3,9 @@ import SwiftUI
 struct ContentView: View {
     @EnvironmentObject var store: TodoStore
     @EnvironmentObject var noteStore: NoteStore
+    @ObservedObject private var themeStore = ThemeStore.shared
     @State private var showAddTodo = false
-    @State private var showAIPlanner = false
+    @State private var showSettings = false
     @State private var currentTime = Date()
     @State private var showBoot = true
     @State private var notePanelCollapsed = false
@@ -21,6 +22,7 @@ struct ContentView: View {
                 }
             } else {
                 mainContent
+                    .id(themeStore.preset)
             }
 
             ScanlineOverlay()
@@ -30,9 +32,8 @@ struct ContentView: View {
             AddTodoView()
                 .environmentObject(store)
         }
-        .sheet(isPresented: $showAIPlanner) {
-            AIPlannerView()
-                .environmentObject(store)
+        .sheet(isPresented: $showSettings) {
+            SettingsView()
         }
         .onAppear { styleWindow() }
     }
@@ -149,7 +150,7 @@ struct ContentView: View {
             HStack(spacing: 12) {
                 cmdHint("[CLICK]", "select")
                 cmdHint("[N]", "new task")
-                cmdHint("[A]", "ai planner")
+                cmdHint("[,]", "settings")
             }
 
             Spacer()
@@ -157,24 +158,23 @@ struct ContentView: View {
             HStack(spacing: 8) {
                 BlinkingCursor(width: 6, height: 11)
 
-                // AI Planner button
+                // Settings button
                 Button {
-                    showAIPlanner = true
+                    showSettings = true
                 } label: {
                     HStack(spacing: 5) {
-                        Text("⚡")
-                        Text("AI")
+                        Text("⚙")
+                        Text("SETTINGS")
                             .font(TerminalTheme.body)
                             .tracking(1)
                     }
-                    .foregroundColor(TerminalTheme.cyan)
+                    .foregroundColor(TerminalTheme.primaryDim)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
-                    .terminalBorder(TerminalTheme.cyan.opacity(0.6))
+                    .terminalBorder(TerminalTheme.border)
                 }
                 .buttonStyle(.plain)
-                .glowEffect(TerminalTheme.cyan, radius: 2)
-                .keyboardShortcut("a", modifiers: [])
+                .keyboardShortcut(",", modifiers: [])
 
                 Button {
                     showAddTodo = true
