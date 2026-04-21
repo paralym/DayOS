@@ -1,8 +1,9 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @ObservedObject private var api   = ClaudeAPIManager.shared
-    @ObservedObject private var theme = ThemeStore.shared
+    @ObservedObject private var api          = ClaudeAPIManager.shared
+    @ObservedObject private var theme        = ThemeStore.shared
+    @ObservedObject private var focusSettings = FocusOverlaySettings.shared
 
     @Environment(\.dismiss) private var dismiss
 
@@ -68,41 +69,138 @@ struct SettingsView: View {
 
                         Divider().background(TerminalTheme.borderDim)
 
-                        // MARK: Anthropic
-                        sectionHeader("ANTHROPIC")
+                        // MARK: API credentials (only for selected provider)
+                        if api.provider == .anthropic {
+                            sectionHeader("ANTHROPIC")
 
-                        apiField(
-                            label: "API KEY",
-                            placeholder: "sk-ant-...",
-                            text: $anthropicKey,
-                            isSecret: true
-                        )
+                            apiField(
+                                label: "API KEY",
+                                placeholder: "sk-ant-...",
+                                text: $anthropicKey,
+                                isSecret: true
+                            )
 
-                        apiField(
-                            label: "MODEL",
-                            placeholder: APIProvider.anthropic.defaultModel,
-                            text: $anthropicModel,
-                            isSecret: false
-                        )
+                            apiField(
+                                label: "MODEL",
+                                placeholder: APIProvider.anthropic.defaultModel,
+                                text: $anthropicModel,
+                                isSecret: false
+                            )
 
-                        Divider().background(TerminalTheme.borderDim)
+                            Divider().background(TerminalTheme.borderDim)
+                        }
 
-                        // MARK: OpenRouter
-                        sectionHeader("OPENROUTER")
+                        if api.provider == .openRouter {
+                            sectionHeader("OPENROUTER")
 
-                        apiField(
-                            label: "API KEY",
-                            placeholder: "sk-or-...",
-                            text: $openRouterKey,
-                            isSecret: true
-                        )
+                            apiField(
+                                label: "API KEY",
+                                placeholder: "sk-or-...",
+                                text: $openRouterKey,
+                                isSecret: true
+                            )
 
-                        apiField(
-                            label: "MODEL",
-                            placeholder: APIProvider.openRouter.defaultModel,
-                            text: $openRouterModel,
-                            isSecret: false
-                        )
+                            apiField(
+                                label: "MODEL",
+                                placeholder: APIProvider.openRouter.defaultModel,
+                                text: $openRouterModel,
+                                isSecret: false
+                            )
+
+                            Divider().background(TerminalTheme.borderDim)
+                        }
+
+                        // MARK: Focus Overlay
+                        sectionHeader("FOCUS OVERLAY")
+
+                        // Display picker
+                        VStack(spacing: 6) {
+                            ForEach(NSScreen.screens, id: \.displayID) { screen in
+                                if let id = screen.displayID {
+                                    let enabled = focusSettings.isEnabled(id)
+                                    Button {
+                                        focusSettings.toggleDisplay(id)
+                                        FocusOverlayManager.shared.refreshVisibility()
+                                    } label: {
+                                        HStack(spacing: 10) {
+                                            Image(systemName: enabled ? "checkmark.square.fill" : "square")
+                                                .foregroundColor(enabled ? TerminalTheme.cyan : TerminalTheme.primaryDim)
+                                                .font(.system(size: 13))
+                                            VStack(alignment: .leading, spacing: 1) {
+                                                Text(screen.localizedName)
+                                                    .font(TerminalTheme.small)
+                                                    .foregroundColor(enabled ? TerminalTheme.primary : TerminalTheme.primaryDim)
+                                                Text("\(Int(screen.frame.width))×\(Int(screen.frame.height))")
+                                                    .font(TerminalTheme.micro)
+                                                    .foregroundColor(TerminalTheme.primaryDim.opacity(0.5))
+                                            }
+                                            Spacer()
+                                            if screen == NSScreen.main {
+                                                Text("主屏幕")
+                                                    .font(TerminalTheme.micro)
+                                                    .foregroundColor(TerminalTheme.primaryDim.opacity(0.4))
+                                            }
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 8)
+                                        .background(enabled ? TerminalTheme.surface : Color.clear)
+                                        .terminalBorder(enabled ? TerminalTheme.cyan.opacity(0.4) : TerminalTheme.borderDim)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                        }
+
+                        VStack(spacing: 12) {
+                            // Opacity
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text("边缘亮度")
+                                        .font(TerminalTheme.small)
+                                        .foregroundColor(TerminalTheme.primaryDim)
+                                    Spacer()
+                                    Text(String(format: "%.0f%%", focusSettings.opacity * 100))
+                                        .font(TerminalTheme.small)
+                                        .foregroundColor(TerminalTheme.cyan)
+                                        .monospacedDigit()
+                                }
+                                Slider(value: $focusSettings.opacity, in: 0.1...0.75)
+                                    .accentColor(TerminalTheme.primary)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(TerminalTheme.surface)
+                            .terminalBorder(TerminalTheme.borderDim)
+
+                            // Gradient steepness
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack {
+                                    Text("过渡范围")
+                                        .font(TerminalTheme.small)
+                                        .foregroundColor(TerminalTheme.primaryDim)
+                                    Spacer()
+                                    Text(focusSettings.gradientEdge < 0.25 ? "缓" :
+                                         focusSettings.gradientEdge > 0.6  ? "陡" : "中")
+                                        .font(TerminalTheme.small)
+                                        .foregroundColor(TerminalTheme.cyan)
+                                }
+                                Slider(value: $focusSettings.gradientEdge, in: 0.05...0.8)
+                                    .accentColor(TerminalTheme.primary)
+                                HStack {
+                                    Text("渐变从中心扩散")
+                                        .font(TerminalTheme.micro)
+                                        .foregroundColor(TerminalTheme.primaryDim.opacity(0.5))
+                                    Spacer()
+                                    Text("集中在边缘")
+                                        .font(TerminalTheme.micro)
+                                        .foregroundColor(TerminalTheme.primaryDim.opacity(0.5))
+                                }
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(TerminalTheme.surface)
+                            .terminalBorder(TerminalTheme.borderDim)
+                        }
 
                         // Save button
                         HStack {

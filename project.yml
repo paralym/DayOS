@@ -12,7 +12,6 @@ targets:
     platform: macOS
     sources:
       - path: Sources
-    resources:
       - path: Assets.xcassets
     settings:
       base:
@@ -27,5 +26,5 @@ targets:
     entitlements:
       path: DayOS.entitlements
       properties:
-        com.apple.security.app-sandbox: true
-        com.apple.security.user-selected.read-write: true
+        com.apple.security.app-sandbox: false
+        com.apple.security.network.client: true

@@ -35,6 +35,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        true
+        false  // keep alive when main window is closed; mini capsule stays visible
     }
 }

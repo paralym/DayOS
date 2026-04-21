@@ -46,10 +46,14 @@ struct TimelineView: View {
                 .frame(maxWidth: .infinity)
             }
             .onAppear {
+                currentTime = Date()
                 let hour = Calendar.current.component(.hour, from: Date())
-                proxy.scrollTo(max(hour - 2, 0), anchor: .top)
+                proxy.scrollTo(max(hour - 4, 0), anchor: .top)
             }
             .onReceive(minuteTimer) { _ in
+                currentTime = Date()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
                 currentTime = Date()
             }
         }
@@ -97,7 +101,7 @@ struct TimelineView: View {
         let height = max(blockH(todo), 28)
 
         return ZStack(alignment: .topLeading) {
-            // Progress fill (for active tasks)
+            // Progress fill (for running tasks)
             if todo.isActive && !todo.isCompleted {
                 GeometryReader { geo in
                     Rectangle()
@@ -146,7 +150,7 @@ struct TimelineView: View {
                 .padding(.vertical, 4)
             }
         }
-        .terminalBorder(col.opacity(0.35))
+        .terminalBorder(col.opacity(todo.isPaused ? 0.2 : 0.35))
         .glowEffect(col, radius: todo.isActive && !todo.isCompleted ? 2 : 0)
     }
 
@@ -168,7 +172,7 @@ struct TimelineView: View {
     // MARK: - Current Time Line
 
     private var currentTimeLine: some View {
-        HStack(spacing: 0) {
+        HStack(alignment: .top, spacing: 0) {
             Text(currentTime.timeString)
                 .font(TerminalTheme.micro)
                 .foregroundColor(TerminalTheme.red)
@@ -176,7 +180,7 @@ struct TimelineView: View {
                 .frame(width: timeColW - 4, alignment: .trailing)
                 .padding(.trailing, 4)
 
-            ZStack(alignment: .leading) {
+            ZStack(alignment: .topLeading) {
                 Rectangle()
                     .fill(TerminalTheme.red)
                     .frame(height: 1)
@@ -321,6 +325,19 @@ struct TodoDetailView: View {
                         }
                         .buttonStyle(.plain)
                         .glowEffect()
+
+                        if todo.isInTimeWindow && !todo.isCompleted {
+                            Button {
+                                store.togglePause(id: todo.id)
+                                dismiss()
+                            } label: {
+                                Text(todo.isPaused ? "[ ▶ RESUME ]" : "[ ⏸ PAUSE ]")
+                                    .font(TerminalTheme.body)
+                                    .foregroundColor(TerminalTheme.amber)
+                            }
+                            .buttonStyle(.plain)
+                            .glowEffect(TerminalTheme.amber)
+                        }
 
                         Spacer()
 

@@ -27,7 +27,10 @@ struct ContentView: View {
 
             ScanlineOverlay()
         }
-        .onReceive(clockTimer) { _ in currentTime = Date() }
+        .onReceive(clockTimer) { _ in
+            currentTime = Date()
+            FocusOverlayManager.shared.setVisible(hasActiveTodo)
+        }
         .sheet(isPresented: $showAddTodo) {
             AddTodoView()
                 .environmentObject(store)
@@ -229,6 +232,10 @@ struct ContentView: View {
         }
     }
 
+    private var hasActiveTodo: Bool {
+        store.todosForToday.contains { $0.isActive && !$0.isCompleted }
+    }
+
     private var nextTask: Todo? {
         store.todosForToday
             .filter { $0.isFuture && !$0.isCompleted }
@@ -260,6 +267,9 @@ struct ContentView: View {
             window.titleVisibility = .hidden
             window.styleMask.insert(.fullSizeContentView)
             window.isMovableByWindowBackground = true
+
+            MiniWindowManager.shared.setup(todoStore: store)
+            FocusOverlayManager.shared.setup()
         }
     }
 }

@@ -54,6 +54,18 @@ class TodoStore: ObservableObject {
         save()
     }
 
+    func togglePause(id: UUID) {
+        guard let idx = todos.firstIndex(where: { $0.id == id }) else { return }
+        if todos[idx].isPaused {
+            todos[idx].isPaused = false
+            todos[idx].pausedProgress = nil
+        } else {
+            todos[idx].pausedProgress = todos[idx].progress
+            todos[idx].isPaused = true
+        }
+        save()
+    }
+
     func select(_ todo: Todo?) {
         selectedTodoId = todo?.id
     }

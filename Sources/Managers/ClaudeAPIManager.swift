@@ -234,7 +234,7 @@ class ClaudeAPIManager: ObservableObject {
         let suggestions: [AgentSuggestion]
     }
 
-    func processNote(content: String) async throws -> NoteProcessResult {
+    func processNote(content: String, previousOrganized: String = "", existingTodos: [Todo] = []) async throws -> NoteProcessResult {
         guard hasKey else { throw APIError.noAPIKey }
 
         let df = DateFormatter()
@@ -243,16 +243,48 @@ class ClaudeAPIManager: ObservableObject {
 
         let system = """
         You are a productivity assistant silently observing the user's daily notes.
-        Your role: organize their raw thoughts into actionable tasks and surface what matters most.
+        Your role: incrementally update the organized note and surface what matters most.
 
         Rules:
         - Keep very close to the user's original words — don't invent new tasks
-        - organizedContent: rewrite their note as a clean, structured list (markdown bullets)
-        - suggestions: pick 2–4 specific tasks worth scheduling TODAY, with realistic time estimates
+        - organizedContent: if a previous organized note exists, UPDATE it by merging in new/changed \
+        content from the raw notes — preserve existing structure, only add or revise what changed. \
+        If no previous note, create a clean structured markdown bullet list.
+        - suggestions: create exactly ONE suggestion entry per item/bullet in the organizedContent — \
+        every item must appear, do not skip or merge any. Use realistic time estimates. \
+        Consider existing todos to avoid time conflicts and respect task dependencies. \
+        AFTER all task entries, append one extra rest/break entry (15–30 min) if there are 3+ task entries \
+        — the break is always additional, never replacing a real task entry.
         - Be concise — this is a terminal UI with limited space
         - You MUST call the process_note tool
         """
-        let user = "Current time: \(timeStr)\n\nUser's notes:\n\n\(content)"
+
+        let todosBlock: String
+        if existingTodos.isEmpty {
+            todosBlock = "(none)"
+        } else {
+            todosBlock = existingTodos.map { t in
+                let status = t.isCompleted ? "✓" : (t.isActive ? "►" : " ")
+                return "[\(status)] \(t.startTime.timeString)–\(t.endTime.timeString) \(t.title) [\(t.priority.rawValue)]"
+            }.joined(separator: "\n")
+        }
+
+        let prevBlock = previousOrganized.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            ? "(none yet)"
+            : previousOrganized
+
+        let user = """
+        Current time: \(timeStr)
+
+        Today's scheduled tasks:
+        \(todosBlock)
+
+        Previous organized note:
+        \(prevBlock)
+
+        Updated raw notes:
+        \(content)
+        """
 
         let schema: [String: Any] = [
             "type": "object",

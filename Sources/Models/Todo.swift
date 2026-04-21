@@ -32,6 +32,8 @@ struct Todo: Identifiable, Codable {
     var startTime: Date
     var endTime: Date
     var isCompleted: Bool = false
+    var isPaused: Bool = false
+    var pausedProgress: Double? = nil
     var notes: String = ""
     var priority: TodoPriority = .medium
 
@@ -40,13 +42,21 @@ struct Todo: Identifiable, Codable {
     var midpointTime: Date { startTime.addingTimeInterval(duration / 2) }
 
     var progress: Double {
+        if let frozen = pausedProgress { return frozen }
         let now = Date()
         guard now >= startTime else { return 0 }
         guard now <= endTime   else { return 1 }
         return now.timeIntervalSince(startTime) / duration
     }
 
+    /// True when within time window AND not paused (overlay / focus logic uses this)
     var isActive: Bool {
+        let now = Date()
+        return !isPaused && now >= startTime && now <= endTime
+    }
+
+    /// True when within scheduled time window regardless of pause state
+    var isInTimeWindow: Bool {
         let now = Date()
         return now >= startTime && now <= endTime
     }
@@ -56,6 +66,7 @@ struct Todo: Identifiable, Codable {
 
     var statusSymbol: String {
         if isCompleted { return "[✓]" }
+        if isPaused && isInTimeWindow { return "[⏸]" }
         if isActive    { return "[►]" }
         if isPast      { return "[·]" }
         return "[ ]"

@@ -77,6 +77,6 @@ class ThemeStore: ObservableObject {
 
     private init() {
         let saved = UserDefaults.standard.string(forKey: "dayos_theme") ?? ""
-        preset = TerminalPreset(rawValue: saved) ?? .phosphor
+        preset = TerminalPreset(rawValue: saved) ?? .ghost
     }
 }

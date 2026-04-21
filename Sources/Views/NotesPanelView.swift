@@ -7,8 +7,11 @@ struct NotesPanelView: View {
 
     @State private var viewMode: ViewMode = .raw
     @State private var editingText: String = ""
+    @State private var editingAgentText: String = ""
+    @State private var hasInitialized = false
     @State private var expandedSuggestionId: UUID? = nil
     @State private var editedStartTimes: [UUID: Date] = [:]
+    @State private var editedEndTimes: [UUID: Date] = [:]
 
     enum ViewMode { case raw, agent }
 
@@ -33,6 +36,12 @@ struct NotesPanelView: View {
 
             // Collapse handle
             collapseHandle
+        }
+        .onAppear {
+            if !hasInitialized {
+                editingText = noteStore.todayNote.rawContent
+                hasInitialized = true
+            }
         }
     }
 
@@ -192,7 +201,7 @@ struct NotesPanelView: View {
                 .background(Color.clear)
                 .padding(8)
                 .onChange(of: editingText) { newVal in
-                    noteStore.updateRawContent(newVal)
+                    noteStore.updateRawContent(newVal, todos: todoStore.todosForToday)
                 }
 
             if editingText.isEmpty {
@@ -231,12 +240,26 @@ struct NotesPanelView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ScrollView {
-                Text(noteStore.todayNote.organizedContent)
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $editingAgentText)
                     .font(TerminalTheme.small)
                     .foregroundColor(TerminalTheme.cyan.opacity(0.9))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(10)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
+                    .padding(8)
+                    .onChange(of: editingAgentText) { newVal in
+                        noteStore.updateOrganizedContent(newVal)
+                    }
+                    .onChange(of: noteStore.todayNote.organizedContent) { newVal in
+                        // Sync when agent rewrites content (avoid loop if user is editing)
+                        if newVal != editingAgentText {
+                            editingAgentText = newVal
+                        }
+                    }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onAppear {
+                editingAgentText = noteStore.todayNote.organizedContent
             }
         }
     }
@@ -272,7 +295,7 @@ struct NotesPanelView: View {
         let col = sug.priority.color
         let isExpanded = expandedSuggestionId == sug.id
         let start = editedStartTimes[sug.id] ?? proposedStart(for: sug)
-        let end   = start.addingTimeInterval(Double(sug.estimatedMinutes) * 60)
+        let end   = editedEndTimes[sug.id] ?? start.addingTimeInterval(Double(sug.estimatedMinutes) * 60)
 
         return VStack(alignment: .leading, spacing: 0) {
             // ── Collapsed header row (always visible) ──
@@ -280,7 +303,9 @@ struct NotesPanelView: View {
                 withAnimation(.easeInOut(duration: 0.15)) {
                     expandedSuggestionId = isExpanded ? nil : sug.id
                     if editedStartTimes[sug.id] == nil {
-                        editedStartTimes[sug.id] = proposedStart(for: sug)
+                        let s = proposedStart(for: sug)
+                        editedStartTimes[sug.id] = s
+                        editedEndTimes[sug.id] = s.addingTimeInterval(Double(sug.estimatedMinutes) * 60)
                     }
                 }
             } label: {
@@ -318,29 +343,43 @@ struct NotesPanelView: View {
             // ── Expanded detail ──
             if isExpanded {
                 VStack(alignment: .leading, spacing: 8) {
-                    // Time display
-                    HStack(spacing: 4) {
-                        Text("TIME")
-                            .font(TerminalTheme.micro)
-                            .foregroundColor(TerminalTheme.primaryDim)
-                            .tracking(1)
-                        Spacer()
-                        Text("\(start.timeString) – \(end.timeString)")
-                            .font(TerminalTheme.small)
-                            .foregroundColor(col)
-                            .glowEffect(col, radius: 2)
-                    }
-
-                    // Time picker for start
+                    // Start picker
                     HStack(spacing: 4) {
                         Text("START")
                             .font(TerminalTheme.micro)
                             .foregroundColor(TerminalTheme.primaryDim)
+                            .frame(width: 34, alignment: .leading)
                         DatePicker(
                             "",
                             selection: Binding(
                                 get: { editedStartTimes[sug.id] ?? start },
-                                set: { editedStartTimes[sug.id] = $0 }
+                                set: { newStart in
+                                    // Keep duration when start changes
+                                    let dur = end.timeIntervalSince(start)
+                                    editedStartTimes[sug.id] = newStart
+                                    editedEndTimes[sug.id] = newStart.addingTimeInterval(dur)
+                                }
+                            ),
+                            displayedComponents: .hourAndMinute
+                        )
+                        .datePickerStyle(.field)
+                        .labelsHidden()
+                        .colorScheme(.dark)
+                        .accentColor(col)
+                        .font(TerminalTheme.small)
+                    }
+
+                    // End picker
+                    HStack(spacing: 4) {
+                        Text("END")
+                            .font(TerminalTheme.micro)
+                            .foregroundColor(TerminalTheme.primaryDim)
+                            .frame(width: 34, alignment: .leading)
+                        DatePicker(
+                            "",
+                            selection: Binding(
+                                get: { editedEndTimes[sug.id] ?? end },
+                                set: { editedEndTimes[sug.id] = $0 }
                             ),
                             displayedComponents: .hourAndMinute
                         )
@@ -360,19 +399,18 @@ struct NotesPanelView: View {
 
                     // Confirm button
                     Button {
-                        addSuggestionWithTime(sug, start: editedStartTimes[sug.id] ?? start)
+                        addSuggestionWithTime(sug, start: editedStartTimes[sug.id] ?? start,
+                                              end: editedEndTimes[sug.id] ?? end)
                         expandedSuggestionId = nil
                     } label: {
-                        HStack(spacing: 4) {
-                            Text("+ ADD TO TIMELINE")
-                                .font(TerminalTheme.micro)
-                                .tracking(1)
-                        }
-                        .foregroundColor(TerminalTheme.background)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .frame(maxWidth: .infinity)
-                        .background(col)
+                        Text("+ ADD TO TIMELINE")
+                            .font(TerminalTheme.micro)
+                            .tracking(1)
+                            .foregroundColor(TerminalTheme.background)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .frame(maxWidth: .infinity)
+                            .background(col)
                     }
                     .buttonStyle(.plain)
                     .glowEffect(col, radius: 2)
@@ -385,13 +423,13 @@ struct NotesPanelView: View {
     }
 
     // Allow using .let on value types for inline binding
-    private func addSuggestionWithTime(_ sug: AgentSuggestion, start: Date) {
-        let end = start.addingTimeInterval(Double(sug.estimatedMinutes) * 60)
+    private func addSuggestionWithTime(_ sug: AgentSuggestion, start: Date, end: Date) {
         let todo = Todo(title: sug.title, startTime: start, endTime: end,
                        notes: sug.reason, priority: sug.priority)
         todoStore.addTodo(todo)
         noteStore.markSuggestionAdded(id: sug.id)
         editedStartTimes.removeValue(forKey: sug.id)
+        editedEndTimes.removeValue(forKey: sug.id)
     }
 
     /// Computes the next available half-hour slot, stacking suggestions sequentially

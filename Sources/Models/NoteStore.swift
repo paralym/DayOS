@@ -32,14 +32,19 @@ class NoteStore: ObservableObject {
 
     // MARK: - Note mutations
 
-    func updateRawContent(_ content: String) {
+    func updateRawContent(_ content: String, todos: [Todo] = []) {
         todayNote.rawContent = content
         persist()
-        scheduleAgentProcessing()
+        scheduleAgentProcessing(todos: todos)
     }
 
     func dismissSuggestion(id: UUID) {
         todayNote.suggestions.removeAll { $0.id == id }
+        persist()
+    }
+
+    func updateOrganizedContent(_ content: String) {
+        todayNote.organizedContent = content
         persist()
     }
 
@@ -52,26 +57,31 @@ class NoteStore: ObservableObject {
 
     // MARK: - Agent processing (debounced)
 
-    func scheduleAgentProcessing() {
+    func scheduleAgentProcessing(todos: [Todo] = []) {
         processingTask?.cancel()
         guard ClaudeAPIManager.shared.hasKey,
               !todayNote.rawContent.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
 
+        let capturedTodos = todos
         processingTask = Task { @MainActor [weak self] in
             try? await Task.sleep(for: .seconds(2.5))
             guard !Task.isCancelled else { return }
-            await self?.runAgentProcessing()
+            await self?.runAgentProcessing(todos: capturedTodos)
         }
     }
 
     @MainActor
-    func runAgentProcessing() async {
+    func runAgentProcessing(todos: [Todo] = []) async {
         let content = todayNote.rawContent.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !content.isEmpty else { return }
         processingState = .processing
 
         do {
-            let result = try await ClaudeAPIManager.shared.processNote(content: content)
+            let result = try await ClaudeAPIManager.shared.processNote(
+                content: content,
+                previousOrganized: todayNote.organizedContent,
+                existingTodos: todos
+            )
             todayNote.organizedContent = result.organizedContent
             todayNote.suggestions = result.suggestions
             todayNote.lastProcessed = Date()
